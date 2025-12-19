@@ -1,27 +1,28 @@
-# Use the official n8n image as base
-FROM n8nio/n8n:latest
+# Start from an Alpine image with Python
+FROM python:3.12-alpine
 
-# Install Python, pip, build tools, and dependencies
+# Install nodejs (needed for n8n) and other dependencies
 RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    build-base \
+    nodejs \
+    npm \
+    tini \
+    bash \
     jpeg-dev \
     zlib-dev \
-    libffi-dev
+    libffi-dev \
+    build-base
 
-# Create a virtual environment for Python packages
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install n8n globally
+RUN npm install -g n8n
 
-# Upgrade pip inside venv
-RUN pip install --upgrade pip
-
-# Install Python packages inside the virtual environment
-RUN pip install --no-cache-dir numpy opencv-python-headless
-
-# Set working directory (optional, keeps it clean)
+# Set up working directory
 WORKDIR /home/n8n
 
-# Copy entrypoint (optional, keeps original n8n entrypoint)
-ENTRYPOINT [ "tini", "--", "/bin/sh", "-c", "n8n" ]
+# Expose default n8n port
+EXPOSE 5678
+
+# Use tini as entrypoint for signal handling
+ENTRYPOINT ["tini", "--"]
+
+# Start n8n
+CMD ["n8n"]
